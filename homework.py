@@ -85,7 +85,7 @@ def parse_status(homework):
     logger.debug('Извлекается информация о домашней работе.')
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
-    if homework_name is None or homework_status is None:
+    if not homework_name or not homework_status:
         raise KeyError('Неверный ответ от сервера.')
     if homework_status not in HOMEWORK_VERDICTS:
         raise KeyError('Неожиданный статус домашней работы.')
@@ -100,11 +100,19 @@ def main(): # noqa
         logger.critical(error_message)
         send_message(chat_id=TELEGRAM_CHAT_ID, text=error_message)
         sys.exit(error_message)
+    try:
+        bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        timestamp = int(time.time())
+        MESSAGE = ''
+        start_message = 'Бот активирован.'
+        send_message(bot, start_message)
+        logger.debug(start_message)
+    except Exception as error:
+        message = f'Сбой в работе программы: {error}'
+        send_message(bot, message)
+        logger.error(message, exc_info=True)
     while True:
         try:
-            bot = telegram.Bot(token=TELEGRAM_TOKEN)
-            timestamp = int(time.time())
-            MESSAGE = ''
             response = get_api_answer(timestamp)
             homework = check_response(response)
             if homework:
